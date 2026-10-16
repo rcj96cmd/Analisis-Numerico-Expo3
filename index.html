@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Método de Euler - Análisis Numérico</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+ <div class="top">
+  <h1>Método de Euler <small>Análisis Numérico · EDO – Problemas de Valor Inicial</small></h1>
+  <div class="tools">
+   <button id="zm" title="Reducir letra">A−</button>
+   <button id="zp" title="Agrandar letra">A+</button>
+   <button id="pj" title="Alto contraste y letra grande">Modo proyector</button>
+  </div>
+ </div>
+ <nav id="nav"></nav>
+</header>
+
+<main>
+<section class="view" id="inicio" data-t="Inicio">
+ <svg class="deco" viewBox="0 0 400 220" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true">
+  <path d="M10 200 C120 190 200 120 390 20"/>
+  <polyline points="10,200 90,192 170,172 250,138 330,88 390,52" stroke-dasharray="7 5"/>
+  <g fill="#fff" stroke="none"><circle cx="10" cy="200" r="5"/><circle cx="90" cy="192" r="5"/><circle cx="170" cy="172" r="5"/><circle cx="250" cy="138" r="5"/><circle cx="330" cy="88" r="5"/><circle cx="390" cy="52" r="5"/></g>
+ </svg>
+ <div class="cv">
+  <div class="cv-tag">Análisis Numérico</div>
+  <h1>Ecuaciones Diferenciales Ordinarias</h1>
+  <div class="cv-sub">Método de Euler</div>
+  <p class="cv-p">Resolución numérica de Problemas de Valor Inicial</p>
+  <div class="cv-fx">\[ y' = f(x,y),\ \ y(x_0)=y_0 \qquad\Longrightarrow\qquad y_{n+1}=y_n+h\,f(x_n,y_n) \]</div>
+  <button class="cv-go" onclick="go(1)">Comenzar →</button>
+  <!-- Podés agregar acá los integrantes / docente: <p class="cv-foot">Integrantes: ...</p> -->
+  <div class="cv-foot">U.T.N. F.R.L.P.</div>
+ </div>
+</section>
+
+<section class="view" id="teoria" data-t="Teoría">
+ <h2>Fundamentos</h2>
+
+ <h3>Ecuaciones diferenciales ordinarias (EDO)</h3>
+ <p>Una ecuación diferencial ordinaria es una ecuación en la que la incógnita es una <b>función</b> \(y(x)\) y aparece relacionada con sus <b>derivadas</b>. La derivada \(y'\) indica cómo cambia \(y\) cuando cambia \(x\), es decir, la <b>pendiente</b> de la curva en cada punto. Su forma general de primer orden es:</p>
+ <div class="fx">\[ y' = f(x,y) \qquad\text{o}\qquad \frac{dy}{dx} = f(x,y) \]</div>
+ <p>Por ejemplo, \(y' = x^2 + y\) dice: "en cada punto \((x,y)\), la curva que buscamos tiene pendiente \(x^2 + y\)". La función \(f\) es la que nos entrega esa pendiente.</p>
+
+ <h3>Problema de Valor Inicial (PVI)</h3>
+ <p>Una EDO sola tiene infinitas soluciones (una familia de curvas). Para quedarnos con una sola agregamos una <b>condición inicial</b>: el valor de \(y\) en un punto de partida. Eso es un PVI:</p>
+ <div class="fx big">\[ y' = f(x,y), \qquad y(x_0)=y_0, \qquad x_0 \le x \le x_f \]</div>
+ <ul>
+  <li>\(y' = f(x,y)\): regla que da la pendiente en cada punto.</li>
+  <li>\(y(x_0)=y_0\): punto por el que la curva debe pasar (el punto de partida).</li>
+  <li>\([x_0, x_f]\): intervalo donde queremos conocer la solución.</li>
+ </ul>
+ <p>Para que el problema esté bien planteado (solución única y que cambie poco si cambian poco los datos), se pide que \(f\) sea continua y cumpla la <b>condición de Lipschitz</b> respecto de \(y\):</p>
+ <div class="fx">\[ \left| f(x,y_1) - f(x,y_2) \right| \le L\,\left| y_1 - y_2 \right| \]</div>
+ <p>En la práctica se cumple casi siempre que \(\dfrac{\partial f}{\partial y}\) esté acotada.</p>
+
+ <h3>¿Qué problema intenta resolver el método de Euler?</h3>
+ <p>Muchas EDO que aparecen en ingeniería y ciencias (circuitos eléctricos, enfriamiento de un cuerpo, crecimiento de poblaciones, caída con rozamiento, reacciones químicas) <b>no tienen una solución analítica</b> que se pueda escribir con funciones conocidas, o esa solución es demasiado complicada de obtener.</p>
+ <p>El método de Euler resuelve esto cambiando el objetivo: <b>no busca la función \(y(x)\) completa, sino valores aproximados de \(y\) en una cantidad finita de puntos</b>, llamados <b>puntos de malla</b>, equiespaciados a lo largo del intervalo:</p>
+ <div class="fx">\[ x_i = x_0 + i\,h, \quad i = 0,1,2,\dots,N \qquad\text{con}\qquad h = \frac{x_f - x_0}{N} \]</div>
+ <p>La distancia \(h\) entre puntos se llama <b>tamaño de paso</b>. Una vez calculados los valores en los puntos de malla, los valores en puntos intermedios se pueden estimar por interpolación.</p>
+
+ <div class="kp"><b>¿Por qué métodos numéricos?</b> Cuando no se puede resolver la ecuación "a mano", un método numérico la transforma en una sucesión de cuentas simples (sumas y productos) que una calculadora o una computadora hace sin dificultad.</div>
+
+ <h3>¿Para qué se usa?</h3>
+ <ul>
+  <li>Para <b>aproximar</b> la solución de un PVI cuando no hay solución exacta o es muy costosa de obtener.</li>
+  <li>Como <b>herramienta didáctica</b>: es la técnica de aproximación más básica y su simplicidad permite entender las ideas que luego se usan en métodos más precisos (Euler mejorado, Taylor, Runge-Kutta).</li>
+  <li>Aunque rara vez se usa solo en la práctica por su baja precisión, es la base sobre la que se construyen esos métodos más avanzados.</li>
+ </ul>
+
+ <h3>Idea geométrica</h3>
+ <p>Euler es un <b>método de paso simple</b>: para calcular el siguiente punto sólo usa el punto actual. Partiendo de \((x_0,y_0)\) conocemos la pendiente de la curva ahí, \(f(x_0,y_0)\). Entonces <b>seguimos la recta tangente</b> durante una distancia \(h\) y llegamos a un nuevo punto, que tomamos como aproximación de la curva real. Desde ese nuevo punto volvemos a calcular la pendiente y repetimos. El resultado es una <b>poligonal</b> (una línea quebrada) que va "siguiendo" a la curva verdadera.</p>
+ <svg viewBox="0 0 540 285" style="width:100%;max-width:680px;background:#fff;border:2px solid var(--bd);border-radius:8px;display:block;margin:auto" font-family="Segoe UI,Arial,sans-serif" font-size="13" role="img" aria-label="Interpretación geométrica de un paso del método de Euler">
+  <defs>
+   <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#555"/></marker>
+  </defs>
+  <!-- ejes -->
+  <line x1="40" y1="250" x2="510" y2="250" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="40" y1="250" x2="40" y2="18" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="514" y="266" fill="#000" font-style="italic">x</text>
+  <text x="26" y="22" fill="#000" font-style="italic">y</text>
+  <!-- guías -->
+  <g stroke="#999" stroke-dasharray="4 4" stroke-width="1.2">
+   <line x1="144" y1="197" x2="144" y2="250"/>
+   <line x1="344" y1="128" x2="344" y2="250"/>
+   <line x1="144" y1="197" x2="344" y2="197"/>
+  </g>
+  <!-- curva real y tangente -->
+  <path d="M60 210 Q270 190 480 50" stroke="#667eea" stroke-width="3.5" fill="none"/>
+  <line x1="110" y1="204" x2="350" y2="153.7" stroke="#e91e63" stroke-width="3"/>
+  <!-- error local -->
+  <line x1="352" y1="128" x2="352" y2="155" stroke="#c62828" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="360" y="146" fill="#c62828">error local</text>
+  <!-- paso h -->
+  <line x1="144" y1="232" x2="344" y2="232" stroke="#555" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="244" y="226" fill="#000" text-anchor="middle" font-style="italic">h</text>
+  <!-- incremento h·f -->
+  <text x="338" y="189" fill="#e91e63" text-anchor="end">h·f(x<tspan dy="4" font-size="10">n</tspan><tspan dy="-4">,y</tspan><tspan dy="4" font-size="10">n</tspan><tspan dy="-4">)</tspan></text>
+  <!-- puntos -->
+  <circle cx="144" cy="197" r="6" fill="#764ba2"/>
+  <circle cx="344" cy="128" r="6" fill="#667eea"/>
+  <circle cx="344" cy="155" r="6" fill="#e91e63"/>
+  <!-- etiquetas de puntos -->
+  <text x="84" y="180" fill="#764ba2" font-weight="700">(x<tspan dy="4" font-size="10">n</tspan><tspan dy="-4">, y</tspan><tspan dy="4" font-size="10">n</tspan><tspan dy="-4">)</tspan></text>
+  <text x="334" y="116" fill="#667eea" text-anchor="end" font-weight="700">y(x<tspan dy="4" font-size="10">n+1</tspan><tspan dy="-4">) real</tspan></text>
+  <text x="358" y="174" fill="#e91e63" font-weight="700">y<tspan dy="4" font-size="10">n+1</tspan><tspan dy="-4"> (Euler)</tspan></text>
+  <!-- marcas en el eje -->
+  <text x="144" y="268" fill="#000" text-anchor="middle">x<tspan dy="4" font-size="10">n</tspan></text>
+  <text x="344" y="268" fill="#000" text-anchor="middle">x<tspan dy="4" font-size="10">n+1</tspan><tspan dy="-4"> = x</tspan><tspan dy="4" font-size="10">n</tspan><tspan dy="-4"> + h</tspan></text>
+  <!-- leyenda -->
+  <g>
+   <rect x="52" y="14" width="236" height="50" rx="6" fill="#fff" stroke="#ccc"/>
+   <line x1="62" y1="29" x2="92" y2="29" stroke="#667eea" stroke-width="3.5"/>
+   <text x="100" y="33" fill="#000">solución real y(x)</text>
+   <line x1="62" y1="50" x2="92" y2="50" stroke="#e91e63" stroke-width="3"/>
+   <text x="100" y="54" fill="#000">tangente (pendiente f(x<tspan dy="4" font-size="10">n</tspan><tspan dy="-4">,y</tspan><tspan dy="4" font-size="10">n</tspan><tspan dy="-4">))</tspan></text>
+  </g>
+ </svg>
+ <p style="margin-top:.6rem">Se ve que el nuevo punto no cae exactamente sobre la curva real: la tangente se "despega" de la curva porque la pendiente cambia a lo largo del paso. Esa diferencia es el error del método, y es menor cuanto más chico sea \(h\).</p>
+</section>
+
+<section class="view" id="formula" data-t="Fórmula">
+ <h2>La fórmula de Euler</h2>
+ <div class="fx big">\[ \begin{aligned} y_{n+1} &= y_n + h\cdot f(x_n,y_n)\\ x_{n+1} &= x_n + h \end{aligned} \]</div>
+ <p>Algunos libros, como Burden y Faires, la escriben con \(t\) y \(w\): \(w_{i+1} = w_i + h\,f(t_i,w_i)\), con \(w_0=\alpha\). Es exactamente lo mismo.</p>
+
+ <h3>Qué significa cada parte</h3>
+ <ul>
+  <li>\(x_n,\ y_n\): punto actual. \(y_n\) es el valor <b>aproximado</b> de la solución en \(x_n\) (en el primer paso es el dato inicial: \(x_0,\ y_0\)).</li>
+  <li>\(f(x_n,y_n) = y'_n\): pendiente de la tangente en el punto actual. Se obtiene evaluando la EDO.</li>
+  <li>\(h\): tamaño del paso, \(h = x_{n+1}-x_n\). Es cuánto avanzamos horizontalmente.</li>
+  <li>\(h\cdot f(x_n,y_n)\): incremento vertical. Es la regla "altura = pendiente × distancia horizontal" (\(\Delta y \approx y'\cdot\Delta x\)).</li>
+  <li>\(y_{n+1}\): nuevo valor aproximado = valor actual + incremento.</li>
+  <li>Número de iteraciones: \(n = \dfrac{x_f - x_0}{h}\).</li>
+ </ul>
+
+ <h3>De dónde sale: desarrollo de Taylor</h3>
+ <p>Si \(y(x)\) tiene dos derivadas continuas, el teorema de Taylor permite escribir el valor en el punto siguiente a partir del punto actual:</p>
+ <div class="fx">\[ y(x_{n+1}) = y(x_n) + h\,y'(x_n) + \frac{h^2}{2}\,y''(\xi), \qquad \xi \in (x_n,x_{n+1}) \]</div>
+ <p>Como \(y\) satisface la ecuación diferencial, \(y'(x_n) = f\big(x_n,y(x_n)\big)\), entonces:</p>
+ <div class="fx">\[ y(x_{n+1}) = y(x_n) + h\,f\big(x_n,y(x_n)\big) + \frac{h^2}{2}\,y''(\xi) \]</div>
+ <p>El método de Euler consiste en <b>descartar el último término</b> (el resto, que contiene a \(h^2\)) y trabajar con aproximaciones \(y_n \approx y(x_n)\). Así se obtiene la fórmula \(y_{n+1} = y_n + h\,f(x_n,y_n)\). Lo que se descarta es justamente el error que se comete en cada paso.</p>
+
+ <h3>Algoritmo</h3>
+ <ol>
+  <li>Datos de entrada: \(f(x,y)\), \(x_0\), \(y_0\), \(x_f\) y el paso \(h\) (o la cantidad de pasos \(N\)).</li>
+  <li>Calcular el número de iteraciones: \(n = (x_f - x_0)/h\).</li>
+  <li>Para \(i = 0,1,\dots,n-1\) repetir: calcular la pendiente \(f(x_i,y_i)\), calcular \(y_{i+1} = y_i + h\,f(x_i,y_i)\) y avanzar \(x_{i+1} = x_i + h\).</li>
+  <li>El último \(y_n\) es la aproximación de \(y(x_f)\).</li>
+ </ol>
+
+ <h3>Error del método</h3>
+ <div class="kp"><b>Error:</b> local por paso \(O(h^2)\) (es el término descartado de Taylor); global, acumulado en todos los pasos, \(O(h)\). Por eso, si se divide \(h\) a la mitad, el error baja aproximadamente a la mitad (y se hace el doble de cuentas).</div>
+ <p>Si \(f\) cumple la condición de Lipschitz con constante \(L\) y la solución cumple \(|y''(x)| \le M\) en \([x_0,x_f]\), el error global tiene la cota:</p>
+ <div class="fx">\[ \left| y(x_i) - y_i \right| \le \frac{h\,M}{2L}\left[ e^{L\,(x_i - x_0)} - 1 \right] \]</div>
+ <p>La cota crece de forma controlada con \(x\) (el método es estable) y depende linealmente de \(h\), por lo que achicar el paso mejora la precisión. Su debilidad es que exige conocer una cota \(M\) de la segunda derivada, por lo que suele ser bastante mayor que el error real.</p>
+ <p><b>Límite al achicar \(h\):</b> en una computadora cada cuenta tiene error de redondeo (\(\delta\)). Al achicar \(h\) se hacen más operaciones y el redondeo se acumula, de modo que el error total tiene la forma:</p>
+ <div class="fx">\[ E(h) = \frac{hM}{2} + \frac{\delta}{h} \qquad\Rightarrow\qquad h_{\text{óptimo}} = \sqrt{\frac{2\delta}{M}} \]</div>
+ <p>Achicar \(h\) más allá de ese valor empeora la aproximación. Normalmente \(\delta\) es tan chico que este límite no afecta el uso habitual.</p>
+ <p>Para mejorar la precisión: pasos más chicos o métodos de orden superior (Euler mejorado, Taylor, Runge-Kutta).</p>
+
+ <h3>Ventajas y desventajas</h3>
+ <div class="tw"><table>
+  <tr><th>Ventajas</th><th>Desventajas</th></tr>
+  <tr><td>✅ Simple de entender y aplicar</td><td>❌ Precisión baja</td></tr>
+  <tr><td>✅ No requiere derivadas de \(f\)</td><td>❌ Necesita pasos pequeños</td></tr>
+  <tr><td>✅ Base de métodos avanzados (RK)</td><td>❌ Puede ser inestable</td></tr>
+ </table></div>
+</section>
+
+<section class="view" id="ejercicio" data-t="Ejercicios">
+ <h2>Ejercicios resueltos paso a paso</h2>
+ <div class="sub" id="exsub">
+  <button class="on" data-k="1">Ejercicio 1</button>
+  <button data-k="2">Ejercicio 2 (Práctica 2b)</button>
+  <button data-k="3">Ejercicio 3 (Práctica 2c)</button>
+ </div>
+ <div class="exs">
+  <div class="ex on" id="ex1">
+   <h3>Ejercicio 1: ejemplo guía</h3>
+   <div class="fx big">\[ \begin{aligned} &y' = x^2 + y, \qquad y(0)=1\\ &\text{Hallar } y(0.4) \text{ con } h=0.1 \quad\Rightarrow\quad n=\frac{0.4-0}{0.1}=4 \text{ iteraciones} \end{aligned} \]</div>
+   <p class="why">Este ejercicio fija el procedimiento que se repite en los dos siguientes.</p>
+
+   <h3>Plan de resolución</h3>
+   <ol>
+    <li><b>Identificar los datos:</b> \(f(x,y)=x^2+y\), \(x_0=0\), \(y_0=1\), \(h=0.1\) y \(x_f=0.4\).</li>
+    <li><b>Calcular las iteraciones:</b> \(n=\dfrac{0.4-0}{0.1}=4\), o sea que se llega a \(x=0.4\) en 4 pasos.</li>
+    <li><b>Repetir en cada iteración</b> tres cosas: (a) tomar el punto actual, (b) calcular la pendiente con \(f\), (c) avanzar con \(y_{n+1}=y_n+h\cdot f\).</li>
+    <li><b>Leer el resultado:</b> el \(y\) obtenido en la última iteración es la aproximación de \(y(0.4)\).</li>
+   </ol>
+
+   <h3>Desarrollo</h3>
+   <div id="steps1"></div>
+   <h3>Tabla resumen</h3>
+   <div class="tw"><table id="sumtab1"></table></div>
+   <div class="kp" id="cmp1"></div>
+  </div>
+  <div class="ex" id="ex2">
+   <h3>Ejercicio 2: Práctica 2b</h3>
+   <div class="fx big">\[ \begin{aligned} &y' = \sin(t) + e^{-t}, \qquad 0 \le t \le 1, \qquad y(t_0)=0\\ &\text{Aproximar } y(1) \text{ con } h=0.5 \quad\Rightarrow\quad n=\frac{1-0}{0.5}=2 \text{ iteraciones} \end{aligned} \]</div>
+   <p class="why">Acá la variable independiente es \(t\), como en el enunciado, por eso los puntos se llaman \(t_n\) en lugar de \(x_n\). El intervalo termina en 1, así que se aproxima la solución en el extremo, \(y(1)\).</p>
+
+   <h3>Plan de resolución</h3>
+   <ol>
+    <li><b>Identificar los datos:</b> \(f(t,y)=\sin(t)+e^{-t}\), \(t_0=0\) (inicio del intervalo), \(y_0=0\), \(h=0.5\) y \(t_f=1\). Acá \(f\) no depende de \(y\): la pendiente sólo cambia con \(t\).</li>
+    <li><b>Calcular las iteraciones:</b> \(n=\dfrac{1-0}{0.5}=2\) pasos.</li>
+    <li><b>Repetir en cada iteración</b> (a) punto actual, (b) pendiente con \(f\), (c) avance con \(y_{n+1}=y_n+h\cdot f\). Para evaluar \(\sin(t)\) la calculadora tiene que estar en <b>radianes</b>.</li>
+    <li><b>Leer el resultado:</b> el último \(y\) es la aproximación de \(y(1)\).</li>
+   </ol>
+
+   <h3>Desarrollo</h3>
+   <div id="steps2"></div>
+   <h3>Tabla resumen</h3>
+   <div class="tw"><table id="sumtab2"></table></div>
+   <div class="kp" id="cmp2"></div>
+  </div>
+  <div class="ex" id="ex3">
+   <h3>Ejercicio 3: Práctica 2c</h3>
+   <div class="fx big">\[ \begin{aligned} &y' = (x-y)^2, \qquad y(2)=0.5\\ &\text{Hallar } y(2.75) \text{ con } h=0.25 \quad\Rightarrow\quad n=\frac{2.75-2}{0.25}=3 \text{ iteraciones} \end{aligned} \]</div>
+   <p class="why">Datos tomados del enunciado de la práctica. Ojo: el punto de partida es \(x_0=2\) y no \(x_0=0\).</p>
+
+   <h3>Plan de resolución</h3>
+   <ol>
+    <li><b>Identificar los datos:</b> \(f(x,y)=(x-y)^2\), \(x_0=2\), \(y_0=0.5\), \(h=0.25\) y \(x_f=2.75\).</li>
+    <li><b>Calcular las iteraciones:</b> \(n=\dfrac{2.75-2}{0.25}=3\) pasos.</li>
+    <li><b>Repetir en cada iteración</b> (a) punto actual, (b) pendiente con \(f\) (acá depende de \(x\) y de \(y\)), (c) avance con \(y_{n+1}=y_n+h\cdot f\).</li>
+    <li><b>Leer el resultado:</b> el último \(y\) es la aproximación de \(y(2.75)\).</li>
+   </ol>
+
+   <h3>Desarrollo</h3>
+   <div id="steps3"></div>
+   <h3>Tabla resumen</h3>
+   <div class="tw"><table id="sumtab3"></table></div>
+   <div class="kp" id="cmp3"></div>
+  </div>
+ </div>
+</section>
+
+<section class="view" id="simulador" data-t="Simulador">
+ <h2>Calculadora y gráfico</h2>
+ <p style="font-size:.95rem">Elegí un ejemplo o armá tu propio problema de valor inicial: completá la EDO, el punto de partida, el paso y hasta dónde llegar.</p>
+ <div class="form">
+  <div style="grid-column:1/-1"><label>Ejemplos</label><select id="pre"></select></div>
+  <div style="grid-column:span 2"><label id="lf"></label><input id="f" value="x^2 + y" placeholder="ej: x^2 + y"></div>
+  <div><label id="lx0"></label><input id="x0" value="0" placeholder="ej: 0"></div>
+  <div><label id="ly0"></label><input id="y0" value="1" placeholder="ej: 1"></div>
+  <div><label>Paso <i>h</i></label><input id="h" value="0.1" placeholder="ej: 0.1"></div>
+  <div><label>Llegar hasta</label><select id="mode"><option value="xf">Valor final</option><option value="n">N° de iteraciones</option></select></div>
+  <div><label id="lxf"></label><input id="xf" value="0.4" placeholder="ej: 0.4"></div>
+  <div style="grid-column:span 2"><label>Solución exacta (opcional, para ver el error)</label><input id="ex" placeholder="ej: 3*exp(x) - x^2 - 2*x - 2"></div>
+  <div><label>Variable</label><select id="var"><option value="x">x</option><option value="t">t</option></select></div>
+  <div><label>Decimales</label><select id="dec"><option>3</option><option selected>4</option><option>5</option><option>6</option></select></div>
+  <label class="chk"><input type="checkbox" id="chst" checked> Desarrollo paso a paso</label>
+  <label class="chk"><input type="checkbox" id="chref" checked> Mostrar solución de referencia</label>
+  <button class="go" id="run">Calcular</button>
+  <button class="go" id="clr" style="background:var(--ac2)">Limpiar todo</button>
+ </div>
+ <p style="font-size:.85rem">Usá x (o t), y, + − * / ^, y funciones como sin, cos, exp, sqrt, log, abs, pi. Con "N° de iteraciones" el programa calcula el punto final como x₀ + n·h.</p>
+ <div id="msg"></div>
+ <div class="cvbox" id="cvbox"><div class="ctl"><button id="zin" title="Acercar">+</button><button id="zout" title="Alejar">−</button><button id="zrs" title="Volver a la vista original">Restablecer</button></div><button class="zoom" id="zoomb" title="Ver el gráfico a pantalla completa (Esc para cerrar)">Ampliar gráfico</button><canvas id="cv"></canvas><div class="tip" id="tip"></div></div>
+ <p class="gh"><b>Gráfico interactivo:</b> arrastrá para moverlo; con la rueda del mouse (o pellizcando en el celu) hacés zoom; si lo hacés sobre un eje, el zoom afecta solo a ese eje; doble clic para restablecer. Pasá el mouse sobre un punto de Euler para ver sus valores.</p>
+ <div class="tw"><table id="tab"></table></div>
+ <div id="stwrap"><h3>Desarrollo paso a paso</h3><div id="steps"></div></div>
+</section>
+
+<section class="view" id="conclusiones" data-t="Conclusiones">
+ <h2>Conclusiones</h2>
+ <div class="fx big">Euler = avanzar siguiendo la pendiente de la tangente, paso a paso\[ y_{n+1} = y_n + h\,f(x_n,y_n) \]</div>
+ <ul>
+  <li>Es el método de un solo paso más simple para resolver un PVI.</li>
+  <li>El error global es \(O(h)\): al dividir \(h\) a la mitad, el error baja aproximadamente a la mitad.</li>
+  <li>Se mejora con Euler mejorado, Taylor y Runge-Kutta (ver práctica de la cátedra).</li>
+ </ul>
+ <h3>Referencias</h3>
+ <p>1. Burden, R.L., Faires, J.D. & Burden, A.M. (2017). <i>Análisis numérico</i>, 10ª ed. Cengage Learning.</p>
+ <p>2. Amiconi, D.F. <i>Ejercicios resueltos: EDO – Problemas de valor inicial</i>. U.T.N. F.R.L.P.</p>
+ <p>3. Cátedras de Modelos Numéricos y Cálculo Avanzado, U.T.N. F.R.L.P. – Práctica de EDO.</p>
+</section>
+</main>
+<footer>Análisis Numérico – Método de Euler · U.T.N. F.R.L.P.</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
