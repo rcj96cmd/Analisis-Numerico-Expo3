@@ -204,6 +204,11 @@ function drawChart(hv){
  g.fillStyle='#000';g.textAlign='center';tx.r.forEach(t=>g.fillText(tickTxt(t,tx.s),X(t),H-B+16));
  g.textAlign='right';ty.r.forEach(t=>g.fillText(tickTxt(t,ty.s),L-5,Y(t)+4));
  g.strokeStyle='#000';g.lineWidth=1.5;g.strokeRect(L,T,pw,ph);
+// ejes x e y (pasan por 0 si está en la vista; si no, quedan sobre el borde)
+ const ax=Math.min(Math.max(X(0),L),L+pw),ay=Math.min(Math.max(Y(0),T),T+ph),vn=$('var').value;
+ g.strokeStyle='#000';g.lineWidth=p?3:2;g.beginPath();g.moveTo(L,ay);g.lineTo(L+pw,ay);g.moveTo(ax,T);g.lineTo(ax,T+ph);g.stroke();
+ g.fillStyle='#000';g.font='italic bold '+(p?17:14)+'px sans-serif';g.textAlign='right';g.fillText(vn,L+pw-6,Math.min(ay+16,T+ph-4)>ay?ay+16:ay-6);
+ g.textAlign='left';g.fillText('y',Math.min(ax+6,L+pw-12),T+14);g.font=(p?15:12)+'px sans-serif';
  g.save();g.beginPath();g.rect(L,T,pw,ph);g.clip();
  const line=(arr,col,w)=>{g.strokeStyle=col;g.lineWidth=w;g.beginPath();let on=false;
   arr.forEach(q=>{if(!Number.isFinite(q.y)){on=false;return}on?g.lineTo(X(q.x),Y(q.y)):g.moveTo(X(q.x),Y(q.y));on=true});g.stroke()};
